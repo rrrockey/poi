@@ -1,5 +1,10 @@
 rootProject.name = 'poi'
 
-include 'poi', 'poi-ooxml-full', 'poi-ooxml-lite-agent', 'poi-scratchpad',
-        'poi-ooxml', 'poi-excelant', 'poi-examples', 'poi-integration', 'poi-ooxml-lite',
-        'poi-fuzz'
+include 'main', 'ooxml', 'excelant', 'examples', 'scratchpad', 'integrationtest'
+
+project(':main').projectDir = new File(settingsDir, 'build/main')
+project(':ooxml').projectDir = new File(settingsDir, 'build/ooxml')
+project(':excelant').projectDir = new File(settingsDir, 'build/excelant')
+project(':examples').projectDir = new File(settingsDir, 'build/examples')
+project(':scratchpad').projectDir = new File(settingsDir, 'build/scratchpad')
+project(':integrationtest').projectDir = new File(settingsDir, 'build/integrationtest')

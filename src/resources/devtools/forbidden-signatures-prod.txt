@@ -17,7 +17,7 @@
 # This file contains API signatures which are specific to POI.
 # The goal is to minimize implicit defaults
 
-@defaultMessage POI forbidden APIs which are not tolerated in production code
+@defaultMessage POI forbidden APIs which are tolerated in non-production code, e.g. in tests and examples
 
 # We have applications which use this to return error codes on invalid commandline parameters...
 #@defaultMessage Please do not terminate the application
@@ -27,6 +27,6 @@
 
 
 java.lang.System#gc() @ Please do not try to stop the world
-java.lang.Throwable#printStackTrace() @ Please use Log4J 2.x for exceptions
-java.lang.Throwable#printStackTrace(java.io.PrintStream) @ Please use Log4J 2.x for exceptions
-java.lang.Throwable#printStackTrace(java.io.PrintWriter) @ Please use Log4J 2.x for exceptions
+java.lang.Throwable#printStackTrace() @ Please use POILogger for exceptions
+java.lang.Throwable#printStackTrace(java.io.PrintStream) @ Please use POILogger for exceptions
+java.lang.Throwable#printStackTrace(java.io.PrintWriter) @ Please use POILogger for exceptions

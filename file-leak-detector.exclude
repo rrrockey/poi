@@ -37,7 +37,6 @@ javax.crypto.Cipher.getMaxAllowedKeyLength
 
 # IntelliJ
 com.intellij.junit4.JUnit4TestRunnerUtil.<clinit>
-com.intellij.rt.coverage.instrumentation.AbstractIntellijClassfileTransformer.getOrLoadClassReader
 
 # OpenJPA/Derby (regression testing)
 org.apache.derby.impl.services.stream.SingleStream.PBmakeFileHPW
@@ -51,33 +50,19 @@ org.apache.openjpa.lib.util.J2DoPrivHelper$7.run
 serp.bytecode.BCClass.read
 serp.util.Strings.toClass
 
-# Logging
-java.util.logging.Logger.findSystemResourceBundle
-java.util.logging.LogManager.readPrimordialConfiguration
-org.slf4j.LoggerFactory.getLogger
-org.apache.log4j.FileAppender.setFile
-org.apache.logging.log4j.core.config.ConfigurationSource.getConfigurationSource
-
 # Java
 sun.util.resources.LocaleData.getBundle
 sun.util.LocaleServiceProviderPool.<init>
 sun.util.calendar.LocalGregorianCalendar.getLocalGregorianCalendar
 sun.net.www.protocol.jar.JarURLConnection.getInputStream
-sun.misc.URLClassPath$JarLoader.ensureOpen
 sun.text.normalizer.ICUData.getStream
 sun.font.T2KFontScaler.initNativeScaler
 sun.font.SunFontManager.loadFonts
 sun.font.FontManagerFactory.getInstance
 sun.font.TrueTypeFont.open
 sun.reflect.misc.MethodUtil.<clinit>
+java.util.logging.Logger.findSystemResourceBundle
 java.text.BreakIterator.getBundle
 sun.java2d.SunGraphicsEnvironment.<init>
 org.kohsuke.file_leak_detector.AgentMain.runHttpServer
-sun.launcher.LauncherHelper.validateMainClass
-sun.util.locale.provider.RuleBasedBreakIterator$1.run
-java.util.ServiceLoader$LazyIterator.hasNextService
-java.util.ServiceLoader$LazyClassPathLookupIterator.nextProviderClass
-java.lang.ClassLoader.loadClass
-
-# other third party libs
-net.bytebuddy.dynamic.ClassFileLocator$ForClassLoader.locate
+org.apache.log4j.FileAppender.setFile
