@@ -600,6 +600,31 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
      * @throws POIXMLException if there were errors when cloning
      */
     public XSSFSheet cloneSheet(int sheetNum, String newName) {
+        XSSFSheet clonedSheet = createSheet()
+
+        XSSFSheet srcSheet = validateAndCreateSheet(sheetNum, newName)
+
+        XSSFDrawing dg = copyRelations(srcSheet, clonedSheet);
+
+        
+        CTWorksheet ct = clonedSheet.getCTWorksheet();
+        if(ct.isSetLegacyDrawing()) {
+            logger.log(POILogger.WARN, "Cloning sheets with comments is not yet supported.");
+            ct.unsetLegacyDrawing();
+        }
+        if (ct.isSetPageSetup()) {
+            logger.log(POILogger.WARN, "Cloning sheets with page setup is not yet supported.");
+            ct.unsetPageSetup();
+        }
+
+        clonedSheet.setSelected(false);
+
+        cloneSheetDrawing(cloneSheet, srcSheet, dg);
+
+        return clonedSheet;
+    }
+
+    private XSSFSheet validateAndCreateSheet(int sheetNum, String newName) {
         validateSheetIndex(sheetNum);
         XSSFSheet srcSheet = sheets.get(sheetNum);
 
@@ -610,8 +635,10 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
             validateSheetName(newName);
         }
 
-        XSSFSheet clonedSheet = createSheet(newName);
+        return srcSheet;
+    }
 
+    private XSSFDrawing copyRelations(XSSFSheet srcSheet, XSSFSheet clonedSheet) {
         // copy sheet's relations
         List<RelationPart> rels = srcSheet.getRelationParts();
         // if the sheet being cloned has a drawing then remember it and re-create it too
@@ -647,18 +674,11 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
         } catch (IOException e){
             throw new POIXMLException("Failed to clone sheet", e);
         }
-        CTWorksheet ct = clonedSheet.getCTWorksheet();
-        if(ct.isSetLegacyDrawing()) {
-            logger.log(POILogger.WARN, "Cloning sheets with comments is not yet supported.");
-            ct.unsetLegacyDrawing();
-        }
-        if (ct.isSetPageSetup()) {
-            logger.log(POILogger.WARN, "Cloning sheets with page setup is not yet supported.");
-            ct.unsetPageSetup();
-        }
 
-        clonedSheet.setSelected(false);
+        return dg;
+    }
 
+    private void cloneSheetDrawing(XSSFSheet srcSheet, XSSFSheet clonedSheet, XSSFDrawing dg) {
         // clone the sheet drawing along with its relationships
         if (dg != null) {
             if(ct.isSetDrawing()) {
@@ -678,7 +698,6 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
                 addRelation(rp, clonedDg);
             }
         }
-        return clonedSheet;
     }
 
     /**
