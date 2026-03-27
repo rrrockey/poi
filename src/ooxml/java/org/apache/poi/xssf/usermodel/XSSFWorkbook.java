@@ -603,52 +603,74 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
         validateSheetIndex(sheetNum);
         XSSFSheet srcSheet = sheets.get(sheetNum);
 
+        String finalName = getOrValidateSheetName(srcSheet, newName);
+        XSSFSheet clonedSheet = createSheet(finalName);
+
+        XSSFDrawing drawing = copySheetRelations(srcSheet, clonedSheet);
+        copyExternalRelationships(srcSheet, clonedSheet);
+        deepCopySheetContent(srcSheet, clonedSheet);
+        handleLegacyDrawingAndPageSetup(clonedSheet);
+        clonedSheet.setSelected(false);
+        cloneSheetDrawing(srcSheet, clonedSheet, drawing);
+        return clonedSheet;
+    }
+
+    // Returns the newName if valid, or generates a unique name if null
+    private String getOrValidateSheetName(XSSFSheet srcSheet, String newName) {
         if (newName == null) {
             String srcName = srcSheet.getSheetName();
-            newName = getUniqueSheetName(srcName);
+            return getUniqueSheetName(srcName);
         } else {
             validateSheetName(newName);
+            return newName;
         }
+    }
 
-        XSSFSheet clonedSheet = createSheet(newName);
-
-        // copy sheet's relations
+    // Copies all non-drawing relations from srcSheet to clonedSheet, returns the drawing if present
+    private XSSFDrawing copySheetRelations(XSSFSheet srcSheet, XSSFSheet clonedSheet) {
         List<RelationPart> rels = srcSheet.getRelationParts();
-        // if the sheet being cloned has a drawing then remember it and re-create it too
-        XSSFDrawing dg = null;
-        for(RelationPart rp : rels) {
+        XSSFDrawing drawing = null;
+        for (RelationPart rp : rels) {
             POIXMLDocumentPart r = rp.getDocumentPart();
-            // do not copy the drawing relationship, it will be re-created
-            if(r instanceof XSSFDrawing) {
-                dg = (XSSFDrawing)r;
+            if (r instanceof XSSFDrawing) {
+                drawing = (XSSFDrawing) r;
                 continue;
             }
-
             addRelation(rp, clonedSheet);
         }
+        return drawing;
+    }
 
+    // Copies external relationships from srcSheet to clonedSheet
+    private void copyExternalRelationships(XSSFSheet srcSheet, XSSFSheet clonedSheet) {
         try {
-            for(PackageRelationship pr : srcSheet.getPackagePart().getRelationships()) {
+            for (PackageRelationship pr : srcSheet.getPackagePart().getRelationships()) {
                 if (pr.getTargetMode() == TargetMode.EXTERNAL) {
-                    clonedSheet.getPackagePart().addExternalRelationship
-                            (pr.getTargetURI().toASCIIString(), pr.getRelationshipType(), pr.getId());
+                    clonedSheet.getPackagePart().addExternalRelationship(
+                            pr.getTargetURI().toASCIIString(), pr.getRelationshipType(), pr.getId());
                 }
             }
         } catch (InvalidFormatException e) {
             throw new POIXMLException("Failed to clone sheet", e);
         }
+    }
 
-
+    // Deep copies the sheet XML content from srcSheet to clonedSheet
+    private void deepCopySheetContent(XSSFSheet srcSheet, XSSFSheet clonedSheet) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             srcSheet.write(out);
             try (ByteArrayInputStream bis = new ByteArrayInputStream(out.toByteArray())) {
                 clonedSheet.read(bis);
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new POIXMLException("Failed to clone sheet", e);
         }
+    }
+
+    // Handles legacy drawing and page setup warnings and unsets them if present
+    private void handleLegacyDrawingAndPageSetup(XSSFSheet clonedSheet) {
         CTWorksheet ct = clonedSheet.getCTWorksheet();
-        if(ct.isSetLegacyDrawing()) {
+        if (ct.isSetLegacyDrawing()) {
             logger.log(POILogger.WARN, "Cloning sheets with comments is not yet supported.");
             ct.unsetLegacyDrawing();
         }
@@ -656,29 +678,25 @@ public class XSSFWorkbook extends POIXMLDocument implements Workbook, Date1904Su
             logger.log(POILogger.WARN, "Cloning sheets with page setup is not yet supported.");
             ct.unsetPageSetup();
         }
+    }
 
-        clonedSheet.setSelected(false);
-
-        // clone the sheet drawing along with its relationships
-        if (dg != null) {
-            if(ct.isSetDrawing()) {
-                // unset the existing reference to the drawing,
-                // so that subsequent call of clonedSheet.createDrawingPatriarch() will create a new one
+    // Clones the drawing and its relationships if present
+    private void cloneSheetDrawing(XSSFSheet srcSheet, XSSFSheet clonedSheet, XSSFDrawing drawing) {
+        CTWorksheet ct = clonedSheet.getCTWorksheet();
+        if (drawing != null) {
+            if (ct.isSetDrawing()) {
                 ct.unsetDrawing();
             }
             XSSFDrawing clonedDg = clonedSheet.createDrawingPatriarch();
-            // copy drawing contents
-            clonedDg.getCTDrawing().set(dg.getCTDrawing());
+            clonedDg.getCTDrawing().set(drawing.getCTDrawing());
 
             clonedDg = clonedSheet.createDrawingPatriarch();
 
-            // Clone drawing relations
             List<RelationPart> srcRels = srcSheet.createDrawingPatriarch().getRelationParts();
             for (RelationPart rp : srcRels) {
                 addRelation(rp, clonedDg);
             }
         }
-        return clonedSheet;
     }
 
     /**
